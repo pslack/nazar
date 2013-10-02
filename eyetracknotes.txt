@@ -1,0 +1,45 @@
+http://www.seas.upenn.edu/~jnewlin/projects/eyetracker/
+
+
+#include <ApplicationServices/ApplicationServices.h>
+
+int to(int x, int y)
+{
+    CGPoint newloc;
+    CGEventRef eventRef;
+    newloc.x = x;
+    newloc.y = y;
+
+    eventRef = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, newloc,
+                                        kCGMouseButtonCenter);
+    //Apparently, a bug in xcode requires this next line
+    CGEventSetType(eventRef, kCGEventMouseMoved);
+    CGEventPost(kCGSessionEventTap, eventRef);
+    CFRelease(eventRef);
+
+    return 0;
+}
+
+
+//build notes for opencv that are better
+http://opencv.willowgarage.com/wiki/InstallGuide
+
+/Users/dougmummenhoff/nazar/3rdparty/src/OpenNI-MacOSX-x64-2.2/Tools
+
+for building OpenCV there is this issued to fix
+
+http://answers.opencv.org/question/4432/what-caused-this-happencv_xadd-parse-issue-in/
+
+opencv QA
+
+http://code.opencv.org/projects/opencv/wiki/QA_in_OpenCV
+
+test data for running test cases: 
+git clone git://github.com/Itseez/opencv_extra.git testdata
+
+
+http://stackoverflow.com/questions/13623431/pattern-matching-find-reference-object-in-second-image-opencv
+http://computer-vision-talks.com/2012/08/a-battle-of-three-descriptors-surf-freak-and-brisk/
+http://opencv-code.com/tutorials/detecting-simple-shapes-in-an-image/
+
+

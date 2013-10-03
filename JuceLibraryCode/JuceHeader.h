@@ -14,11 +14,11 @@
 #define __APPHEADERFILE_VS5V6Z__
 
 #include "AppConfig.h"
-#include "modules/juce_audio_basics/juce_audio_basics.h"
-#include "modules/juce_audio_devices/juce_audio_devices.h"
-#include "modules/juce_audio_formats/juce_audio_formats.h"
-#include "modules/juce_audio_processors/juce_audio_processors.h"
-#include "modules/juce_audio_utils/juce_audio_utils.h"
+//#include "modules/juce_audio_basics/juce_audio_basics.h"
+//#include "modules/juce_audio_devices/juce_audio_devices.h"
+//#include "modules/juce_audio_formats/juce_audio_formats.h"
+//#include "modules/juce_audio_processors/juce_audio_processors.h"
+//#include "modules/juce_audio_utils/juce_audio_utils.h"
 #include "modules/juce_box2d/juce_box2d.h"
 #include "modules/juce_core/juce_core.h"
 #include "modules/juce_cryptography/juce_cryptography.h"

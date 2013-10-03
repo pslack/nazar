@@ -31,8 +31,11 @@ void EyeTracker::run(){
     // and set the lower to 0 (which forces edges merging)
     //   Canny(thresh, gray0, 0, 50, 5);
     
-// if(!frameBuffer)   
-// imshow(cv::String(processName.getCharPointer()), thresh);
+    const MessageManagerLock mmLock;
+    // the event loop will now be locked so it's safe to make a few calls..
+
+    if(!frameBuffer)
+ imshow(cv::String(processName.getCharPointer()), inputValue);
     
     frame_gray.release();
     thresh.release();
@@ -41,7 +44,9 @@ void EyeTracker::run(){
     int64 now = Time::getHighResolutionTicks();
     double totaltime = 1000.0 * Time::highResolutionTicksToSeconds (now - timeStamp);
     
-    DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));
+    lastCalculatedLatency = totaltime;
+    
+    //DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));
     
     
 }

@@ -11,6 +11,27 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+
+enum NAZAR_EVENTID{
+    NAZAR_MOUSE_MOVE = 0x0000,
+    NAZAR_MOUSE_RIGHT_CLICK = 0x0001,
+    NAZAR_MOUSE_LEFT_CLICK = 0x0002,
+    NAZAR_MOUSE_DOUBLE_CLICK = 0x0003
+    
+    
+};
+
+enum CommandIDs
+{
+    doCalibration              = 0x2000,
+    showEyeTrackWindow         = 0x2001,
+    showTargetTrackWindow      = 0x2002,
+    setTransportPlay            = 0x2003,
+    setTransportPause           = 0x2004
+    
+};
+
+
 //Messages
 
 const String MESSAGE_TIMER_TICK ="msg_tmt";
@@ -44,9 +65,11 @@ public:
     T inputValue;
     juce::String processName;
     bool frameBuffer;
+    double lastCalculatedLatency=0.0;
 protected:
     
 };
+
 
 
 
@@ -71,7 +94,8 @@ public:
      */
     virtual void timerTick(int64 ID) = 0;
     virtual void shutDownRequested() = 0;
-    
+    double lastCalculatedLatency=0.0;
+     
 };
 
 class SystemTimer : public MultiTimer 
@@ -89,9 +113,9 @@ public:
     void removeListener(TimerListener * listener);
     void startShutDownTimerSequence();
     double startTimeStamp;
-    void startTmers();
-    void stopTmers();
-    
+    void startTimers();
+    void stopTimers();
+    void setTransportState(bool isPlaying);
     
 protected:
     int64 currentTimeStamp;
@@ -100,15 +124,64 @@ protected:
     bool iShouldShutTheApplication = false;
     int64 baseTime; // the timestamp when we booted the timer up
     //used as a relative base for our heartbeat
+
+
 private:
     void shutTheSystemDown();
-    int latency=150;
-    
-    
-    
+    int latency=80;
+    bool transportState;
 };
 
 #include "opencv2/highgui/highgui.hpp"
+
+
+class NazarMouseEvent{
+public:
+    int64 timeStamp;
+    int nazarEventID;
+};
+
+class MouseController : public Thread, public TimerListener{
+    
+public:
+    MouseController() : Thread("oiii"){
+        leftClickMouse(0, 0);
+        
+    }
+    
+    void run(){
+        rightClickMouse(0, 0);
+    }
+    void moveMouse(int x, int y);
+    void rightClickMouse(int x, int y);
+    void leftClickMouse(int x, int y);
+    void doubleClickMouse(int x, int y);
+    
+    void timerTick(int64 tick){
+        previousTimeStamp = currentTimeStamp;
+        
+        queryMouse();
+    }
+    void shutDownRequested(){
+    }
+    
+    ~MouseController(){}
+    int to(int x,int y);
+    
+private:
+    int64 currentTimeStamp;
+    int64 previousTimeStamp;
+    
+    void queryMouse();
+    MouseInputSource mouseIn = Desktop::getInstance().getMainMouseSource();
+    juce::Point<int> currentScreenPosition;
+    int mouseTimerCount =0;
+    
+private:
+    std::vector<NazarMouseEvent> mouseQueue;
+    
+};
+
 
 
 class CameraInput : public Thread ,public TimerListener
@@ -168,6 +241,82 @@ public:
 };
 
 
+//==============================================================================
+#if JUCE_WINDOWS || JUCE_LINUX || JUCE_MAC
+
+// Just add a simple icon to the Window system tray area..
+class NazarTaskbarComponent  : public SystemTrayIconComponent,
+private Timer
+{
+public:
+    NazarTaskbarComponent()
+    {
+        setIconImage (createImageForIcon());
+        setIconTooltip ("Juce Demo App!");
+    }
+    
+    Image createImageForIcon()
+    {
+        Image icon (Image::RGB, 32, 32, true);
+        
+        Graphics g (icon);
+        
+        // This draws an icon which is just a square with a "j" in it..
+        g.fillAll (Colours::lightblue);
+        g.setColour (Colours::black);
+        g.setFont (Font ((float) icon.getHeight(), Font::bold));
+        g.drawText ("j", 0, 0, icon.getWidth(), icon.getHeight(), Justification::centred, false);
+        
+        return icon;
+    }
+    
+    void mouseDown (const MouseEvent&) override
+    {
+        // On OSX, there can be problems launching a menu when we're not the foreground
+        // process, so just in case, we'll first make our process active, and then use a
+        // timer to wait a moment before opening our menu, which gives the OS some time to
+        // get its act together and bring our windows to the front.
+        
+        Process::makeForegroundProcess();
+        startTimer (50);
+    }
+    
+    void timerCallback() override
+    {
+        stopTimer();
+        
+        PopupMenu m;
+        m.addItem(1,"Goodbye");
+        m.addItem(2,"Calibrate");
+        
+        // It's always better to open menus asynchronously when possible.
+        m.showMenuAsync (PopupMenu::Options(),
+                         ModalCallbackFunction::forComponent (menuInvocationCallback, this));
+    }
+    
+    // This is invoked when the menu is clicked or dismissed
+    static void menuInvocationCallback (int chosenItemID, NazarTaskbarComponent*)
+    {
+        
+        switch (chosenItemID) {
+            case 1:
+                JUCEApplication::getInstance()->systemRequestedQuit();
+                break;
+            case 2:
+                JUCEApplication::getInstance()->invokeDirectly(CommandIDs::doCalibration, true);
+            default:
+                break;
+        };
+            
+        
+    }
+};
+
+#endif
+
+
+
+
 /*
  ==============================================================================
  
@@ -177,7 +326,7 @@ public:
  */
 
 //==============================================================================
-class NazarApplication  : public JUCEApplication
+class NazarApplication  : public JUCEApplication , public MenuBarModel, public MenuBarModelListener, public MouseListener
 {
 public:
     //==============================================================================
@@ -189,6 +338,13 @@ public:
     
     bool moreThanOneInstanceAllowed()       { return false; }
     ScopedPointer<SystemTimer> sysTimer;
+//    ScopedPointer<NewComponent> calibrationWindow;
+    ScopedPointer<NazarTaskbarComponent> sysTrayWindow;
+    MouseController * systemMouseController;
+    
+    int mainScreenWidth = 640;
+    int mainScreenHeight = 480;
+    
     
     //==============================================================================
     void initialise (const String& commandLine)
@@ -218,14 +374,40 @@ public:
         }
         
         
-        sysTimer->startTmers();
+        sysTimer->startTimers();
         
+#if JUCE_MAC  // ..and also the main bar if we're using that on a Mac...
+        
+        MenuBarModel * mm = MenuBarModel::getMacMainMenu ();
+        
+        //        MenuBarModel::setMacMainMenu(this);
+        if(mm == this)
+            
+            DBG("Fuck me I'm me");
+        
+#endif
+        sysTrayWindow = new NazarTaskbarComponent();
+        sysTrayWindow->setVisible(true);
+        
+//        calibrationWindow=new NewComponent();
+//        
+//        calibrationWindow->setVisible(false);
+        
+        Desktop::getInstance().addGlobalMouseListener(this);
+        
+        systemMouseController = new MouseController();
+        
+        
+        sysTimer -> registerListener(LATENCY_TIMER_ID, systemMouseController);
+       systemMouseController->startThread();
         
     }
     
     void shutdown()
     {
         // Add your application's shutdown code here..
+        
+        Desktop::getInstance().removeGlobalMouseListener(this);
         
     }
     
@@ -236,6 +418,8 @@ public:
         // request and let the app carry on running, or call quit() to allow the app to close.
         
         DBG(/*(int64)Thread::getCurrentThreadId() +*/": call to shutdown");
+        
+        sysTimer->removeListener(systemMouseController);
         
         sysTimer->startShutDownTimerSequence();
         
@@ -331,7 +515,159 @@ public:
     }
     
     
+    
+    //// COMMANDS
+    
+    void getAllCommands (Array <CommandID>& commands)
+    {
+        // this returns the set of all commands that this target can perform..
+        const CommandID ids[] = { doCalibration,
+            showEyeTrackWindow,
+            showTargetTrackWindow
+        };
+        
+        commands.addArray (ids, numElementsInArray (ids));
+    }
+    
+    // This method is used when something needs to find out the details about one of the commands
+    // that this object can perform..
+    void getCommandInfo (CommandID commandID, ApplicationCommandInfo& result)
+    {
+        
+        const String viewCategory ("View");
+        const String settingsCategory ("Settings");
+
+        
+        switch (commandID)
+        {
+            case doCalibration:
+                result.setInfo ("Calibration","run the calibration sequence", settingsCategory, 0);
+                result.setTicked (true);
+                result.addDefaultKeypress ('1', ModifierKeys::commandModifier);
+
+                break;
+                
+            case showEyeTrackWindow:
+                result.setInfo ("View Eye","Show the eye tracking window", viewCategory, 0);
+                result.setTicked (eyeWindowVisible);
+                result.addDefaultKeypress ('2', ModifierKeys::commandModifier);
+                
+                break;
+                
+            case showTargetTrackWindow:
+                result.setInfo ("View Target","show the target view window", viewCategory, 0);
+                result.setTicked (targetWindowVisible);
+                result.addDefaultKeypress ('3', ModifierKeys::commandModifier);
+                
+                break;
+                
+            default:
+                break;
+        };
+    }
+    
+    // this is the ApplicationCommandTarget method that is used to actually perform one of our commands..
+    bool perform (const InvocationInfo& info)
+    {
+        switch (info.commandID)
+        {
+            case doCalibration:
+                DBG("Calibration ole");
+    //            calibrationWindow->setVisible(true);
+                break;
+            case showEyeTrackWindow:
+                DBG("show eye");
+                break;
+            case showTargetTrackWindow:
+                DBG("show face");
+                break;
+               
+            default:
+                return false;
+        };
+        
+        return true;
+    }
+    
+    
+    
+    ///// MOUSE INPUT
+    
+    
+    void 	mouseMove (const MouseEvent &event){ DBG("f'in mouse moved");}
+ 	//Called when the mouse moves inside a component.
+    
+    void 	mouseEnter (const MouseEvent &event){}
+ 	//Called when the mouse first enters a component.
+    
+    void 	mouseExit (const MouseEvent &event){}
+ 	//Called when the mouse moves out of a component.
+    
+    void 	mouseDown (const MouseEvent &event){}
+ 	//Called when a mouse button is pressed.
+    
+    void 	mouseDrag (const MouseEvent &event){}
+ 	//Called when the mouse is moved while a button is held down.
+    
+    void 	mouseUp (const MouseEvent &event){}
+    //Called when a mouse button is released.
+    
+    void 	mouseDoubleClick (const MouseEvent &event){}
+    //Called when a mouse button has been double-clicked on a component.
+    
+    void 	mouseWheelMove (const MouseEvent &event, const MouseWheelDetails &wheel){}
+    //Called when the mouse-wheel is moved.
+    
+
+    
+    
+    ///// MENUS
+    
+    StringArray getMenuBarNames()
+    {
+        const char* const names[] = { "Calibration", "View", nullptr };
+        
+        return StringArray (names);
+    }
+    
+    PopupMenu getMenuForIndex (int menuIndex, const String& /*menuName*/)
+    {
+        
+        PopupMenu menu;
+        
+        if (menuIndex == 0)
+        {
+            menu.addCommandItem (commandManager, doCalibration);
+        }
+        else if (menuIndex == 1)
+        {
+            menu.addCommandItem (commandManager, showEyeTrackWindow);
+            menu.addCommandItem (commandManager, showTargetTrackWindow);
+        }
+        
+        return menu;
+    }
+    
+    void menuItemSelected (int menuItemID, int /*topLevelMenuIndex*/)
+    {
+        // most of our menu items are invoked automatically as commands, but we can handle the
+        // other special cases here..
+        
+
+    }
+    
+    void 	menuBarItemsChanged (MenuBarModel *menuBarModel){}
+    
+    void 	menuCommandInvoked (MenuBarModel *menuBarModel, const ApplicationCommandTarget::InvocationInfo &info){}
+    
+    //==============================================================================
+     
+    
 private:
+    
+    bool eyeWindowVisible = true;
+    bool targetWindowVisible = true;
+     
     ScopedPointer<ApplicationCommandManager> commandManager;
 
     void initCommandManager()
@@ -339,10 +675,24 @@ private:
         commandManager = new ApplicationCommandManager();
         commandManager->registerAllCommandsForTarget (this);
         
- 
+#if JUCE_MAC  // ..and also the main bar if we're using that on a Mac...
+        
+        MenuBarModel * mm = MenuBarModel::getMacMainMenu ();
+        
+        MenuBarModel::setMacMainMenu(nullptr);
+        if(mm == this)
+
+            DBG("Fuck me I'm me");
+        
+#endif
+
+        
+
     }
     
+
 };
+
 
 
 

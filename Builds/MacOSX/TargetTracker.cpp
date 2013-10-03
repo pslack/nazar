@@ -34,7 +34,7 @@ void TargetTracker::run(){
     
     // Find contours
     std::vector<std::vector<cv::Point> > contours;
-    cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    cv::findContours(bw.clone(), contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
     
     // The array for storing the approximation curve
     std::vector<cv::Point> approx;
@@ -80,13 +80,15 @@ void TargetTracker::run(){
     {
         const cv::Point* p = &squares[i][0];
         int n = (int)squares[i].size();
-        polylines(dst, &p, &n, 1, true, Scalar(0,255,0), 3, CV_AA);
+        polylines(dst, &p, &n, 1, true, Scalar(0,255,0), 1, 4);
     }
     
 
     
     
-    
+    const MessageManagerLock mmLock;
+    // the event loop will now be locked so it's safe to make a few calls..
+  
 if(frameBuffer)    
     imshow(cv::String(processName.getCharPointer()), dst);
 
@@ -97,8 +99,8 @@ if(frameBuffer)
     
     int64 now = Time::getHighResolutionTicks();
     double totaltime = 1000.0 * Time::highResolutionTicksToSeconds (now - timeStamp);
-    
-    DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));
+    lastCalculatedLatency = totaltime;
+//    DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));
     
     
 

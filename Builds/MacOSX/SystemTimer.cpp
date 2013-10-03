@@ -28,6 +28,8 @@ void SystemTimer::timerCallback (int timerID){
     }
 }
 
+
+
 void SystemTimer::shutTheSystemDown(){
     
     if (systemTimerGroup.size() == 0) {
@@ -62,16 +64,17 @@ void SystemTimer::startShutDownTimerSequence(){
 
 SystemTimer::SystemTimer() : MultiTimer( ){
     baseTime = Time::getHighResolutionTicks();
-    
+    startTimer(SYSTEM_MONITOR_TIMER_ID, 1500);
+   
 }
 
-void SystemTimer::startTmers(){    
-    startTimer(SYSTEM_MONITOR_TIMER_ID, 1500);
+void SystemTimer::startTimers(){
+    //startTimer(SYSTEM_MONITOR_TIMER_ID, 1500);
     startTimer(LATENCY_TIMER_ID, latency);
 }
-void SystemTimer::stopTmers(){    
+void SystemTimer::stopTimers(){
     
-    stopTimer(SYSTEM_MONITOR_TIMER_ID);
+    //stopTimer(SYSTEM_MONITOR_TIMER_ID);
     stopTimer(LATENCY_TIMER_ID);
 }
 
@@ -99,6 +102,17 @@ void SystemTimer::removeListener(TimerListener * listener){
     systemTimerGroup.remove(listener);
 }
 
+
+void SystemTimer::setTransportState(bool isPlaying){
+
+    transportState = isPlaying;
+    
+    if(transportState){
+        startTimers();
+    }else{
+        stopTimers();
+    }
+}
 
 void SystemTimer::setLatency(int latencyValue){
     

@@ -44,14 +44,14 @@ void CameraInput::timerTick(int64 ID){
 }
 
 CameraInput::~CameraInput(){
-    DBG("destroying camera : " + windowName);   
+    DBG("destroying camera : ");
      for (HashMap<ProcessLoop<cv::Mat, cv::Mat> *, bool>::Iterator i (process); i.next();){
          delete i.getKey();
      }
 }
 
 void CameraInput::shouldExit(){
-    DBG("Camera asked to exit : " + windowName);
+    DBG("Camera asked to exit : ");
     
     iShouldExit=true;
 }
@@ -148,23 +148,23 @@ void CameraInput::loadCameraProperties(){
 */
     
     if(capture.isOpened()){
-        cameraSettings.setValue("CV_CAP_PROP_POS_MSEC",     capture.get(CV_CAP_PROP_POS_MSEC));
-        cameraSettings.setValue("CV_CAP_PROP_POS_FRAMES",   capture.get(CV_CAP_PROP_POS_FRAMES));
-        cameraSettings.setValue("CV_CAP_PROP_POS_AVI_RATIO",capture.get(CV_CAP_PROP_POS_AVI_RATIO));
-        cameraSettings.setValue("CV_CAP_PROP_FRAME_WIDTH",  capture.get(CV_CAP_PROP_FRAME_WIDTH));
-        cameraSettings.setValue("CV_CAP_PROP_FRAME_HEIGHT", capture.get(CV_CAP_PROP_FRAME_HEIGHT));
-        cameraSettings.setValue("CV_CAP_PROP_FPS",          capture.get(CV_CAP_PROP_FPS));
-        cameraSettings.setValue("CV_CAP_PROP_FOURCC",       capture.get(CV_CAP_PROP_FOURCC));
-        cameraSettings.setValue("CV_CAP_PROP_FRAME_COUNT",  capture.get(CV_CAP_PROP_FRAME_COUNT));
-        cameraSettings.setValue("CV_CAP_PROP_FORMAT",       capture.get(CV_CAP_PROP_FORMAT));
-        cameraSettings.setValue("CV_CAP_PROP_MODE",         capture.get(CV_CAP_PROP_MODE));
-        cameraSettings.setValue("CV_CAP_PROP_BRIGHTNESS",   capture.get(CV_CAP_PROP_BRIGHTNESS));
-        cameraSettings.setValue("CV_CAP_PROP_CONTRAST",     capture.get(CV_CAP_PROP_CONTRAST));
-        cameraSettings.setValue("CV_CAP_PROP_SATURATION",   capture.get(CV_CAP_PROP_SATURATION));
-        cameraSettings.setValue("CV_CAP_PROP_HUE",          capture.get(CV_CAP_PROP_HUE));
-        cameraSettings.setValue("CV_CAP_PROP_GAIN",         capture.get(CV_CAP_PROP_GAIN));
-        cameraSettings.setValue("CV_CAP_PROP_CONVERT_RGB",  capture.get(CV_CAP_PROP_CONVERT_RGB));
-        cameraSettings.setValue("CV_CAP_PROP_EXPOSURE",     capture.get(CV_CAP_PROP_EXPOSURE));
+        cameraSettings.setValue("CV_CAP_PROP_POS_MSEC",     capture.get(CAP_PROP_POS_MSEC));
+        cameraSettings.setValue("CV_CAP_PROP_POS_FRAMES",   capture.get(CAP_PROP_POS_FRAMES));
+        cameraSettings.setValue("CV_CAP_PROP_POS_AVI_RATIO",capture.get(CAP_PROP_POS_AVI_RATIO));
+        cameraSettings.setValue("CV_CAP_PROP_FRAME_WIDTH",  capture.get(CAP_PROP_FRAME_WIDTH));
+        cameraSettings.setValue("CV_CAP_PROP_FRAME_HEIGHT", capture.get(CAP_PROP_FRAME_HEIGHT));
+        cameraSettings.setValue("CV_CAP_PROP_FPS",          capture.get(CAP_PROP_FPS));
+        cameraSettings.setValue("CV_CAP_PROP_FOURCC",       capture.get(CAP_PROP_FOURCC));
+        cameraSettings.setValue("CV_CAP_PROP_FRAME_COUNT",  capture.get(CAP_PROP_FRAME_COUNT));
+        cameraSettings.setValue("CV_CAP_PROP_FORMAT",       capture.get(CAP_PROP_FORMAT));
+        cameraSettings.setValue("CV_CAP_PROP_MODE",         capture.get(CAP_PROP_MODE));
+        cameraSettings.setValue("CV_CAP_PROP_BRIGHTNESS",   capture.get(CAP_PROP_BRIGHTNESS));
+        cameraSettings.setValue("CV_CAP_PROP_CONTRAST",     capture.get(CAP_PROP_CONTRAST));
+        cameraSettings.setValue("CV_CAP_PROP_SATURATION",   capture.get(CAP_PROP_SATURATION));
+        cameraSettings.setValue("CV_CAP_PROP_HUE",          capture.get(CAP_PROP_HUE));
+        cameraSettings.setValue("CV_CAP_PROP_GAIN",         capture.get(CAP_PROP_GAIN));
+        cameraSettings.setValue("CV_CAP_PROP_CONVERT_RGB",  capture.get(CAP_PROP_CONVERT_RGB));
+        cameraSettings.setValue("CV_CAP_PROP_EXPOSURE",     capture.get(CAP_PROP_EXPOSURE));
  
     }
     
@@ -182,6 +182,9 @@ void CameraInput::loadCameraProperties(){
 void CameraInput::processLoop(){
 
     for (HashMap<ProcessLoop<cv::Mat, cv::Mat> *, bool>::Iterator i (process); i.next();){
+        if(i.getKey()->lastCalculatedLatency > lastCalculatedLatency)
+            lastCalculatedLatency=i.getKey()->lastCalculatedLatency;
+        
         if(doubleBufferBit == i.getValue()){
             if(doubleBufferBit){
                 i.getKey()->process(frame_1,currentTimeStamp);

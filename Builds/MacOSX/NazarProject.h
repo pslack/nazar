@@ -156,11 +156,7 @@ public:
     void leftClickMouse(int x, int y);
     void doubleClickMouse(int x, int y);
     void leftClickMouseControl(int x, int y);
-    void timerTick(int64 tick){
-        previousTimeStamp = currentTimeStamp;
-        
-        queryMouse();
-    }
+    void timerTick(int64 tick);
     void shutDownRequested(){
     }
     
@@ -429,6 +425,21 @@ public:
         sysTimer->startShutDownTimerSequence();
         
         
+    }
+    
+    
+    void postTargetTrackerPoint(float x_bar, float y_bar, int64 TS){
+       DBG("T :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
+    }
+    
+    void postEyeTrackerPoint(float x_bar, float y_bar, int64 TS){
+        DBG("E :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
+        
+    }
+    
+    void postMouseLocation(float x, float y , int64 TS){
+        DBG("M :" + String(x) + ":" + String(y) + ":" + String(TS) );
+   
     }
     
     void anotherInstanceStarted (const String& commandLine)

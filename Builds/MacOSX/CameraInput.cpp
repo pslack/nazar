@@ -37,7 +37,7 @@ void CameraInput::timerTick(int64 ID){
 
     //has to come from thread main!!
     jassert (getCurrentThreadId() != getThreadId());
-    
+    currentTimeStamp=ID;
     cameraShutter.signal();
     
     
@@ -68,7 +68,7 @@ void CameraInput::run(){
         cameraShutter.wait();
         
         //record the time when we took this snap
-        currentTimeStamp = Time::getHighResolutionTicks();
+ //       currentTimeStamp = Time::getHighResolutionTicks();
         
         if(iShouldExit)
             break;

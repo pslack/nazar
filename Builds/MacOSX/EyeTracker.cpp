@@ -138,13 +138,20 @@ void EyeTracker::run(){
         }
     }
     
+    
+    float x_bar=0;
+    float y_bar=0;
+    bool eyefound = false;
+    
     if (maxArea != 0)
     {
         cv::Rect drawRect = cv::Rect(maxContourRect.x-maxContourRect.width,
                                      maxContourRect.y-maxContourRect.height, maxContourRect.width*3, maxContourRect.height*3);
         
         cv::rectangle(inputValue, drawRect, cv::Scalar(0,255,0), 1);
-        
+        eyefound = true;
+        x_bar=drawRect.x + drawRect.width/2;
+        y_bar=drawRect.y + drawRect.height/2;
     }
     
     
@@ -205,6 +212,13 @@ void EyeTracker::run(){
     
     
     
+    const MessageManagerLock mmLock;
+    // the event loop will now be locked so it's safe to make a few calls..
+    if(eyefound){
+        NazarApplication * app = (NazarApplication *)JUCEApplication::getInstance();
+        app->postEyeTrackerPoint(x_bar, y_bar, timeStamp);
+    }
+
     
     
     if(!frameBuffer){
@@ -212,10 +226,10 @@ void EyeTracker::run(){
         const MessageManagerLock mmLock;
         // the event loop will now be locked so it's safe to make a few calls..
         
-        cv::namedWindow( "Source", 1 );
+//        cv::namedWindow( "Source", 1 );
 //        cv::imshow( "Source", spec_image );
 //
-        cv::namedWindow( "H-S Histogram", 1 );
+//        cv::namedWindow( "H-S Histogram", 1 );
 //        cv::imshow( "H-S Histogram", bw);
 
         cv::namedWindow( "xxx", 1 );
@@ -243,7 +257,7 @@ void EyeTracker::run(){
     
     lastCalculatedLatency = totaltime;
     
-    //DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));
+//    DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));
     
     
 }

@@ -44,17 +44,34 @@ void MouseController::doubleClickMouse(int x, int y)
     
 }
 
+void MouseController::timerTick(int64 tick){
+    previousTimeStamp = currentTimeStamp;
+    currentTimeStamp = tick;
+    queryMouse();
+}
+
 
 
 
 void MouseController::queryMouse(){
     Point<int> mp = mouseIn.getScreenPosition();
+    
+    
     if (mp == currentScreenPosition){
     }else{
         currentScreenPosition = mp;
         DBG("msmv detected:" + String(mp.getX()) + ":"+String(mp.getY()));
         
     }
+    
+    
+    const MessageManagerLock mmLock;
+    // the event loop will now be locked so it's safe to make a few calls..
+
+        NazarApplication * app = (NazarApplication *)JUCEApplication::getInstance();
+        app->postMouseLocation(mp.getX(), mp.getY(), currentTimeStamp);
+
+    
     
     
 }

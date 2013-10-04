@@ -17,6 +17,50 @@ using namespace cv;
 using namespace std;
 using namespace juce;
 
+
+cv::Point compute2DPolygonCentroid(const cv::Point* vertices, int vertexCount)
+{
+    cv::Point centroid = {0, 0};
+    double signedArea = 0.0;
+    double x0 = 0.0; // Current vertex X
+    double y0 = 0.0; // Current vertex Y
+    double x1 = 0.0; // Next vertex X
+    double y1 = 0.0; // Next vertex Y
+    double a = 0.0;  // Partial signed area
+    
+    // For all vertices except last
+    int i=0;
+    for (i=0; i<vertexCount-1; ++i)
+    {
+        x0 = vertices[i].x;
+        y0 = vertices[i].y;
+        x1 = vertices[i+1].x;
+        y1 = vertices[i+1].y;
+        a = x0*y1 - x1*y0;
+        signedArea += a;
+        centroid.x += (x0 + x1)*a;
+        centroid.y += (y0 + y1)*a;
+    }
+    
+    // Do last vertex
+    x0 = vertices[i].x;
+    y0 = vertices[i].y;
+    x1 = vertices[0].x;
+    y1 = vertices[0].y;
+    a = x0*y1 - x1*y0;
+    signedArea += a;
+    centroid.x += (x0 + x1)*a;
+    centroid.y += (y0 + y1)*a;
+    
+    signedArea *= 0.5;
+    centroid.x /= (6.0*signedArea);
+    centroid.y /= (6.0*signedArea);
+    
+    return centroid;
+}
+
+
+
 void TargetTracker::run(){
 
 
@@ -78,8 +122,6 @@ void TargetTracker::run(){
             if (vtc == 4 )
             {
                 // Detect rectangle or square
-                cv::Rect r = cv::boundingRect(contours[i]);
-                double ratio = std::abs(1 - (double)r.width / r.height);
                 squares.push_back(approx);
              }        
         
@@ -87,19 +129,38 @@ void TargetTracker::run(){
     
     }    
     
-    for( size_t i = 0; i < squares.size(); i++ )
-    {
-        const cv::Point* p = &squares[i][0];
-        int n = (int)squares[i].size();
-        polylines(dst, &p, &n, 1, true, Scalar(0,255,0), 1, 4);
-    }
+    float x_bar=0;
+    float y_bar=0;
+    bool trackerfound = false;
     
+    if(squares.size() == 2){
+        for( size_t i = 0; i < squares.size(); i++ )
+        {
+            const cv::Point* p = &squares[i][0];
+            int n = (int)squares[i].size();
+            polylines(dst, &p, &n, 1, true, Scalar(0,255,0), 1, 4);
+            cv::Point q=compute2DPolygonCentroid(p, n);
+            x_bar += q.x;
+            y_bar += q.y;
+            
+        }
+        
+        x_bar = x_bar / 2;
+        y_bar = y_bar / 2;
+        trackerfound = true;
+        
+    }
 
     
     
     const MessageManagerLock mmLock;
     // the event loop will now be locked so it's safe to make a few calls..
-  
+    if(trackerfound){
+      NazarApplication * app = (NazarApplication *)JUCEApplication::getInstance();
+        app->postTargetTrackerPoint(x_bar, y_bar, timeStamp);
+    }
+    
+    
 if(frameBuffer)    
     imshow(cv::String(processName.getCharPointer()), dst);
 

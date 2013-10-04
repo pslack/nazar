@@ -108,7 +108,7 @@ void EyeTracker::run(){
 
     
     
-    cv::Canny(thresh, bw, 0, 255, 5);
+//    cv::Canny(thresh, bw, 0, 255, 5);
 
     //(Optional) remove noise (small areas of white pixels)
     
@@ -143,7 +143,7 @@ void EyeTracker::run(){
         cv::Rect drawRect = cv::Rect(maxContourRect.x-maxContourRect.width,
                                      maxContourRect.y-maxContourRect.height, maxContourRect.width*3, maxContourRect.height*3);
         
-        cv::rectangle(inputValue, drawRect, cv::Scalar(0), 1);
+        cv::rectangle(inputValue, drawRect, cv::Scalar(0,255,0), 1);
         
     }
     
@@ -216,7 +216,7 @@ void EyeTracker::run(){
 //        cv::imshow( "Source", spec_image );
 //
         cv::namedWindow( "H-S Histogram", 1 );
-        cv::imshow( "H-S Histogram", bw);
+//        cv::imshow( "H-S Histogram", bw);
 
         cv::namedWindow( "xxx", 1 );
         cv::imshow( "xxx", inputValue);

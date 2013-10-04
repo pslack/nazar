@@ -27,9 +27,20 @@ void TargetTracker::run(){
     cvtColor( inputValue, frame_gray, cv::COLOR_BGR2GRAY );
 //    equalizeHist( frame_gray, frame_gray );
     
-   cv::threshold(frame_gray, thresh, 190, 255, cv::THRESH_BINARY);
     
+    double maxVal = 0;
+    cv::minMaxLoc(frame_gray, NULL, &maxVal, NULL, NULL);
     cv::Mat bw;
+    
+    
+    cv::threshold(frame_gray, thresh, maxVal - 90, 255, cv::THRESH_BINARY);
+    
+    cv::Mat element= cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(1, 1));
+    cv::erode(thresh, thresh, element);
+    cv::dilate(thresh, thresh, element);
+
+    
+    
     cv::Canny(thresh, bw, 0, 255, 5);
     
     // Find contours
@@ -69,7 +80,7 @@ void TargetTracker::run(){
                 // Detect rectangle or square
                 cv::Rect r = cv::boundingRect(contours[i]);
                 double ratio = std::abs(1 - (double)r.width / r.height);
-                squares.push_back(contours[i]);
+                squares.push_back(approx);
              }        
         
         }

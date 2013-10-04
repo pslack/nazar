@@ -53,6 +53,8 @@
 		F601E64717FD4F2500A98F07 /* MouseController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F601E64517FD4F2400A98F07 /* MouseController.cpp */; };
 		F601E64C17FDC71700A98F07 /* MouseEventSenderMAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F601E64A17FDC71700A98F07 /* MouseEventSenderMAC.cpp */; };
 		F65C343717FDFBEC0045510C /* SettingDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F65C343517FDFBEC0045510C /* SettingDialog.cpp */; };
+		F65C344017FF1BDF0045510C /* NazarTaskBarComponent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F65C343E17FF1BDF0045510C /* NazarTaskBarComponent.cpp */; };
+		F65C344317FF21D90045510C /* NeuralNetCalibration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F65C344117FF21D80045510C /* NeuralNetCalibration.cpp */; };
 		FBE299762B3EFDD251B5F3D9 /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D74026E63263CF997D57CCA6 /* Main.cpp */; };
 		FC5550600AA416791C1110B4 /* juce_data_structures.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8AE4E550834AEB15257BEA86 /* juce_data_structures.mm */; };
 		FCA4082E0D0D2B4E4580744F /* juce_opengl.mm in Sources */ = {isa = PBXBuildFile; fileRef = ABC8B8F30D54B2377C171198 /* juce_opengl.mm */; };
@@ -993,6 +995,8 @@
 		F601E64B17FDC71700A98F07 /* MouseEventSenderMAC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MouseEventSenderMAC.h; path = ../../Source/MouseEventSenderMAC.h; sourceTree = "<group>"; };
 		F65C343517FDFBEC0045510C /* SettingDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SettingDialog.cpp; path = ../../Source/NazarUIElements/Source/SettingDialog.cpp; sourceTree = "<group>"; };
 		F65C343617FDFBEC0045510C /* SettingDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SettingDialog.h; path = ../../Source/NazarUIElements/Source/SettingDialog.h; sourceTree = "<group>"; };
+		F65C343E17FF1BDF0045510C /* NazarTaskBarComponent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NazarTaskBarComponent.cpp; path = ../../Source/NazarTaskBarComponent.cpp; sourceTree = "<group>"; };
+		F65C344117FF21D80045510C /* NeuralNetCalibration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NeuralNetCalibration.cpp; path = ../../Source/NeuralNetCalibration.cpp; sourceTree = "<group>"; };
 		F6BE1B9950E860C6C179D44B /* juce_OpenGLShaderProgram.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_OpenGLShaderProgram.cpp; path = ../../JuceLibraryCode/modules/juce_opengl/opengl/juce_OpenGLShaderProgram.cpp; sourceTree = SOURCE_ROOT; };
 		F6E64A5E6F0AC955288EF8E9 /* juce_Component.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_Component.cpp; path = ../../JuceLibraryCode/modules/juce_gui_basics/components/juce_Component.cpp; sourceTree = SOURCE_ROOT; };
 		F6FD6269EF1100B851395408 /* juce_AudioProcessorPlayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_AudioProcessorPlayer.cpp; path = ../../JuceLibraryCode/modules/juce_audio_utils/players/juce_AudioProcessorPlayer.cpp; sourceTree = SOURCE_ROOT; };
@@ -2116,6 +2120,8 @@
 				F601E64617FD4F2400A98F07 /* MouseController.h */,
 				F601E64A17FDC71700A98F07 /* MouseEventSenderMAC.cpp */,
 				F601E64B17FDC71700A98F07 /* MouseEventSenderMAC.h */,
+				F65C343E17FF1BDF0045510C /* NazarTaskBarComponent.cpp */,
+				F65C344117FF21D80045510C /* NeuralNetCalibration.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -2933,6 +2939,8 @@
 				F601E64717FD4F2500A98F07 /* MouseController.cpp in Sources */,
 				F601E64C17FDC71700A98F07 /* MouseEventSenderMAC.cpp in Sources */,
 				F65C343717FDFBEC0045510C /* SettingDialog.cpp in Sources */,
+				F65C344017FF1BDF0045510C /* NazarTaskBarComponent.cpp in Sources */,
+				F65C344317FF21D90045510C /* NeuralNetCalibration.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

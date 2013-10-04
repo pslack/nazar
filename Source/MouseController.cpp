@@ -2,7 +2,7 @@
 //  MouseController.cpp
 //  Nazar
 //
-//  Created by Haig's Tower on 2013-10-03.
+//  Created by Peter J Slack on 2013-10-03.
 //
 //
 

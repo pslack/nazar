@@ -20,7 +20,7 @@
 //[Headers] You can add your own extra header files here...
 //[/Headers]
 
-#include "SettingDialog.h"
+#include "NazarProject.h"
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...

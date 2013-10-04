@@ -1,10 +1,3 @@
-//
-//  EyeTracker.cpp
-//  Nazar
-//
-//  Created by Doug Mummenhoff on 13-09-30.
-//  Copyright (c) 2013 __MyCompanyName__. All rights reserved.
-//
 
 //
 //  TargetTracker.cpp

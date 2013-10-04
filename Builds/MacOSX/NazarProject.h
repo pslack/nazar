@@ -11,6 +11,15 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SettingDialog.h"
+#include "ml.h"
+#include "opencv2/highgui/highgui.hpp"
+
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#define MAX_TRAINING_POINTS 3000
+
+
 
 enum NAZAR_EVENTID{
     NAZAR_MOUSE_MOVE = 0x0000,
@@ -132,7 +141,6 @@ private:
     bool transportState;
 };
 
-#include "opencv2/highgui/highgui.hpp"
 
 
 class NazarMouseEvent{
@@ -149,7 +157,7 @@ public:
     }
     
     void run(){
-        rightClickMouse(0, 0);
+        
     }
     void moveMouse(int x, int y);
     void rightClickMouse(int x, int y);
@@ -177,7 +185,26 @@ private:
     
 };
 
-
+class NeuralNetCalibration : public Thread, public TimerListener {
+public:
+    NeuralNetCalibration();
+    ~NeuralNetCalibration();
+    void process();
+    cv::Point2f predict(float eye_x,float eye_y,float tracker_x, float tracker_y);
+    void shutDownRequested(){}
+    void train();
+    void setTrained(bool trained){
+        isTrained=trained;
+    }
+protected:
+    void run();
+    void timerTick(int64 ID);
+    CvANN_MLP machineBrain;
+    int64 previousTick=0;
+    int64 currentTick=0;
+    float eye_x,eye_y,target_x,target_y;
+    bool isTrained=false;
+};
 
 class CameraInput : public Thread ,public TimerListener
 {
@@ -216,9 +243,6 @@ private:
 };
 
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
 
 
 class TargetTracker : public ProcessLoop<cv::Mat,cv::Mat> {
@@ -244,68 +268,12 @@ class NazarTaskbarComponent  : public SystemTrayIconComponent,
 private Timer
 {
 public:
-    NazarTaskbarComponent()
-    {
-        setIconImage (createImageForIcon());
-        setIconTooltip ("Juce Demo App!");
-    }
+    NazarTaskbarComponent();
     
-    Image createImageForIcon()
-    {
-        Image icon (Image::RGB, 32, 32, true);
-        
-        Graphics g (icon);
-        
-        // This draws an icon which is just a square with a "j" in it..
-        g.fillAll (Colours::lightblue);
-        g.setColour (Colours::black);
-        g.setFont (Font ((float) icon.getHeight(), Font::bold));
-        g.drawText ("j", 0, 0, icon.getWidth(), icon.getHeight(), Justification::centred, false);
-        
-        return icon;
-    }
-    
-    void mouseDown (const MouseEvent&) override
-    {
-        // On OSX, there can be problems launching a menu when we're not the foreground
-        // process, so just in case, we'll first make our process active, and then use a
-        // timer to wait a moment before opening our menu, which gives the OS some time to
-        // get its act together and bring our windows to the front.
-        
-        Process::makeForegroundProcess();
-        startTimer (50);
-    }
-    
-    void timerCallback() override
-    {
-        stopTimer();
-        
-        PopupMenu m;
-        m.addItem(1,"Goodbye");
-        m.addItem(2,"Settings");
-        m.addItem(3,"Calibrate");
-        
-        // It's always better to open menus asynchronously when possible.
-        m.showMenuAsync (PopupMenu::Options(),
-                         ModalCallbackFunction::forComponent (menuInvocationCallback, this));
-    }
-    
-    // This is invoked when the menu is clicked or dismissed
-    static void menuInvocationCallback (int chosenItemID, NazarTaskbarComponent*)
-    {
-        
-        switch (chosenItemID) {
-            case 1:
-                JUCEApplication::getInstance()->systemRequestedQuit();
-                break;
-            case 2:
-                JUCEApplication::getInstance()->invokeDirectly(CommandIDs::doCalibration, true);
-            default:
-                break;
-        };
-            
-        
-    }
+    Image createImageForIcon();
+    void mouseDown (const MouseEvent&);
+    void timerCallback();
+    static void menuInvocationCallback (int chosenItemID, NazarTaskbarComponent*);
 };
 
 #endif
@@ -336,6 +304,8 @@ public:
     ScopedPointer<SystemTimer> sysTimer;
     ScopedPointer<SettingDialog> calibrationWindow;
     ScopedPointer<NazarTaskbarComponent> sysTrayWindow;
+    ScopedPointer<NeuralNetCalibration> calibratorANN;
+    
     MouseController * systemMouseController;
     
     int mainScreenWidth = 640;
@@ -377,9 +347,8 @@ public:
         MenuBarModel * mm = MenuBarModel::getMacMainMenu ();
         
         //        MenuBarModel::setMacMainMenu(this);
-        if(mm == this)
-            
-            DBG("Fuck me I'm me");
+             
+          
         
 #endif
         sysTrayWindow = new NazarTaskbarComponent();
@@ -401,6 +370,10 @@ public:
 //        systemMouseController->leftClickMouseControl(1048, 747);
 //        systemMouseController->leftClickMouseControl(1532, 255);
 //        systemMouseController->leftClickMouseControl(1532, 747);
+        
+        
+        calibratorANN = new NeuralNetCalibration();
+        
         
     }
     
@@ -427,19 +400,55 @@ public:
         
     }
     
+    void clearTrainingData(){
+    
+       mouseInputTrainingData.clear();
+       targetInputTrainingData.clear();
+        eyeInputTrainingData.clear();
+
+    }
+    
+    
+    void beginLearnMode(){
+        calibratorANN->setTrained(false);
+        clearTrainingData();
+        trainingMode=true;
+    }
     
     void postTargetTrackerPoint(float x_bar, float y_bar, int64 TS){
-       DBG("T :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
+       //DBG("T :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
+        if(trainingMode){
+            if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
+                trainNeuralNet();
+            }else {
+                targetInputData.set(TS,cv::Point2f(x_bar,y_bar));
+            }
+            return;
+        }
     }
     
     void postEyeTrackerPoint(float x_bar, float y_bar, int64 TS){
-        DBG("E :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
-        
+        //DBG("E :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
+        if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
+            trainNeuralNet();
+        } else {
+            eyeInputData.set(TS, cv::Point2f(x_bar,y_bar));
+        }
+        return;
     }
     
     void postMouseLocation(float x, float y , int64 TS){
-        DBG("M :" + String(x) + ":" + String(y) + ":" + String(TS) );
+        //DBG("M :" + String(x) + ":" + String(y) + ":" + String(TS) );
+        if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
+            trainNeuralNet();
+        }
    
+    }
+    
+    void trainNeuralNet(){
+        trainingMode=false;
+        DBG("TRAINING COMPLETE");
+        calibratorANN->train();
     }
     
     void anotherInstanceStarted (const String& commandLine)
@@ -464,6 +473,28 @@ public:
         return *cm;
     }
     
+    
+    /////////// ALN
+    
+    HashMap<int64, cv::Point2f> * getMouseTrainingData(){
+        return (&mouseInputTrainingData);
+    }
+    HashMap<int64, cv::Point2f> * getTargetTrainingData(){
+        return (&targetInputTrainingData);
+    }
+    HashMap<int64, cv::Point2f> * getEyeTrainingData(){
+        return (&eyeInputTrainingData);
+    }
+    HashMap<int64, cv::Point2f> * getTargetData(){
+        return (&targetInputData);
+    }
+    HashMap<int64, cv::Point2f> * getEyeData(){
+        return (&eyeInputData);
+    }
+    
+    void setTraining(bool setTrainingBit){
+        trainingMode = setTrainingBit;
+    }
     
     //==============================================================================
     // this little function just demonstrates a few system info calls
@@ -686,6 +717,17 @@ private:
      
     ScopedPointer<ApplicationCommandManager> commandManager;
 
+    HashMap<int64, cv::Point2f> mouseInputTrainingData;
+    HashMap<int64,cv::Point2f> targetInputTrainingData;
+    HashMap<int64,cv::Point2f> eyeInputTrainingData;
+
+    HashMap<int64, cv::Point2f> eyeInputData;
+    HashMap<int64,cv::Point2f> targetInputData;
+
+    
+    bool trainingMode = false;
+    bool transport = false; //fale = pause, true =play
+    
     void initCommandManager()
     {
         commandManager = new ApplicationCommandManager();

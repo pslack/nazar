@@ -10,7 +10,7 @@
 #define NAZARPROJECT_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
-
+#include "SettingDialog.h"
 
 enum NAZAR_EVENTID{
     NAZAR_MOUSE_MOVE = 0x0000,
@@ -145,7 +145,6 @@ class MouseController : public Thread, public TimerListener{
     
 public:
     MouseController() : Thread("oiii"){
-        leftClickMouse(0, 0);
         
     }
     
@@ -156,7 +155,7 @@ public:
     void rightClickMouse(int x, int y);
     void leftClickMouse(int x, int y);
     void doubleClickMouse(int x, int y);
-    
+    void leftClickMouseControl(int x, int y);
     void timerTick(int64 tick){
         previousTimeStamp = currentTimeStamp;
         
@@ -287,7 +286,8 @@ public:
         
         PopupMenu m;
         m.addItem(1,"Goodbye");
-        m.addItem(2,"Calibrate");
+        m.addItem(2,"Settings");
+        m.addItem(3,"Calibrate");
         
         // It's always better to open menus asynchronously when possible.
         m.showMenuAsync (PopupMenu::Options(),
@@ -338,7 +338,7 @@ public:
     
     bool moreThanOneInstanceAllowed()       { return false; }
     ScopedPointer<SystemTimer> sysTimer;
-//    ScopedPointer<NewComponent> calibrationWindow;
+    ScopedPointer<SettingDialog> calibrationWindow;
     ScopedPointer<NazarTaskbarComponent> sysTrayWindow;
     MouseController * systemMouseController;
     
@@ -389,9 +389,9 @@ public:
         sysTrayWindow = new NazarTaskbarComponent();
         sysTrayWindow->setVisible(true);
         
-//        calibrationWindow=new NewComponent();
+        calibrationWindow=new SettingDialog();
 //        
-//        calibrationWindow->setVisible(false);
+       calibrationWindow->setVisible(false);
         
         Desktop::getInstance().addGlobalMouseListener(this);
         
@@ -400,6 +400,11 @@ public:
         
         sysTimer -> registerListener(LATENCY_TIMER_ID, systemMouseController);
        systemMouseController->startThread();
+        
+//        systemMouseController->leftClickMouseControl(1048, 255);
+//        systemMouseController->leftClickMouseControl(1048, 747);
+//        systemMouseController->leftClickMouseControl(1532, 255);
+//        systemMouseController->leftClickMouseControl(1532, 747);
         
     }
     
@@ -573,7 +578,7 @@ public:
         {
             case doCalibration:
                 DBG("Calibration ole");
-    //            calibrationWindow->setVisible(true);
+                calibrationWindow->setVisible(true);
                 break;
             case showEyeTrackWindow:
                 DBG("show eye");

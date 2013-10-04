@@ -31,6 +31,12 @@ void MouseController::leftClickMouse(int x, int y)
     nazarLeftClick(x, y);
     
 }
+void MouseController::leftClickMouseControl(int x, int y)
+{
+    
+    nazarLeftClickControl(x, y);
+    
+}
 void MouseController::doubleClickMouse(int x, int y)
 {
     
@@ -46,7 +52,8 @@ void MouseController::queryMouse(){
     if (mp == currentScreenPosition){
     }else{
         currentScreenPosition = mp;
-        DBG("msmv detected");
+        DBG("msmv detected:" + String(mp.getX()) + ":"+String(mp.getY()));
+        
     }
     
     

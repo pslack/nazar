@@ -52,6 +52,7 @@
 		F601E64017FBC7BB00A98F07 /* libopencv_softcascade.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = F601E62817FBC79B00A98F07 /* libopencv_softcascade.dylib */; };
 		F601E64717FD4F2500A98F07 /* MouseController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F601E64517FD4F2400A98F07 /* MouseController.cpp */; };
 		F601E64C17FDC71700A98F07 /* MouseEventSenderMAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F601E64A17FDC71700A98F07 /* MouseEventSenderMAC.cpp */; };
+		F65C343717FDFBEC0045510C /* SettingDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F65C343517FDFBEC0045510C /* SettingDialog.cpp */; };
 		FBE299762B3EFDD251B5F3D9 /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D74026E63263CF997D57CCA6 /* Main.cpp */; };
 		FC5550600AA416791C1110B4 /* juce_data_structures.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8AE4E550834AEB15257BEA86 /* juce_data_structures.mm */; };
 		FCA4082E0D0D2B4E4580744F /* juce_opengl.mm in Sources */ = {isa = PBXBuildFile; fileRef = ABC8B8F30D54B2377C171198 /* juce_opengl.mm */; };
@@ -990,6 +991,8 @@
 		F601E64617FD4F2400A98F07 /* MouseController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MouseController.h; path = ../../Source/MouseController.h; sourceTree = "<group>"; };
 		F601E64A17FDC71700A98F07 /* MouseEventSenderMAC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MouseEventSenderMAC.cpp; path = ../../Source/MouseEventSenderMAC.cpp; sourceTree = "<group>"; };
 		F601E64B17FDC71700A98F07 /* MouseEventSenderMAC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MouseEventSenderMAC.h; path = ../../Source/MouseEventSenderMAC.h; sourceTree = "<group>"; };
+		F65C343517FDFBEC0045510C /* SettingDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SettingDialog.cpp; path = ../../Source/NazarUIElements/Source/SettingDialog.cpp; sourceTree = "<group>"; };
+		F65C343617FDFBEC0045510C /* SettingDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SettingDialog.h; path = ../../Source/NazarUIElements/Source/SettingDialog.h; sourceTree = "<group>"; };
 		F6BE1B9950E860C6C179D44B /* juce_OpenGLShaderProgram.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_OpenGLShaderProgram.cpp; path = ../../JuceLibraryCode/modules/juce_opengl/opengl/juce_OpenGLShaderProgram.cpp; sourceTree = SOURCE_ROOT; };
 		F6E64A5E6F0AC955288EF8E9 /* juce_Component.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_Component.cpp; path = ../../JuceLibraryCode/modules/juce_gui_basics/components/juce_Component.cpp; sourceTree = SOURCE_ROOT; };
 		F6FD6269EF1100B851395408 /* juce_AudioProcessorPlayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_AudioProcessorPlayer.cpp; path = ../../JuceLibraryCode/modules/juce_audio_utils/players/juce_AudioProcessorPlayer.cpp; sourceTree = SOURCE_ROOT; };
@@ -2099,6 +2102,8 @@
 		9393B1DA44A42DE9402935DF /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				F65C343517FDFBEC0045510C /* SettingDialog.cpp */,
+				F65C343617FDFBEC0045510C /* SettingDialog.h */,
 				6D8A334A9D1F26882B047359 /* SystemMonitor.cpp */,
 				09D53A17F76443D7FFE8E88F /* SystemMonitor.h */,
 				D74026E63263CF997D57CCA6 /* Main.cpp */,
@@ -2927,6 +2932,7 @@
 				FEAE5D6417FA054D00DB6A91 /* EyeTracker.cpp in Sources */,
 				F601E64717FD4F2500A98F07 /* MouseController.cpp in Sources */,
 				F601E64C17FDC71700A98F07 /* MouseEventSenderMAC.cpp in Sources */,
+				F65C343717FDFBEC0045510C /* SettingDialog.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

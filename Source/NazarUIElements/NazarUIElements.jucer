@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="Q3lGYx" name="NazarUIElements" projectType="guiapp" version="1.0.0"
+              bundleIdentifier="com.yourcompany.NazarUIElements" includeBinaryInAppConfig="1"
+              jucerVersion="3.1.0">
+  <MAINGROUP id="mieIyz" name="NazarUIElements">
+    <GROUP id="{756A3A9F-2C06-02DB-DC09-3602697EFD9A}" name="Source">
+      <FILE id="d5BVAl" name="SettingDialog.cpp" compile="1" resource="0"
+            file="Source/SettingDialog.cpp"/>
+      <FILE id="Z0sApn" name="SettingDialog.h" compile="0" resource="0" file="Source/SettingDialog.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <EXPORTFORMATS/>
+  <MODULES/>
+  <JUCEOPTIONS/>
+</JUCERPROJECT>

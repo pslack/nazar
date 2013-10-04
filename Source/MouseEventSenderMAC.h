@@ -12,5 +12,6 @@ void nazarLeftClick(int x, int y);
 void nazarRightClick(int x, int y);
 void nazarDoubleClick(int x, int y);
 void nazarMouseMove(int x, int y);
+void nazarLeftClickControl(int x,int y);
 
 #endif /* defined(__Nazar__MouseEventSenderMAC__) */

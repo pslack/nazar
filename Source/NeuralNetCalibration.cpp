@@ -8,8 +8,9 @@
 
 #include "NazarProject.h"
 
-NeuralNetCalibration::NeuralNetCalibration() : Thread("veyyy"){
-
+NeuralNetCalibration::NeuralNetCalibration(juce::String myName ,SystemTimer * sysTime) : Thread(myName){
+    mySystemTimer = sysTime;
+    
     //The matrix representation of our ANN. We'll have four layers.
     CvMat* neuralLayers = cvCreateMat(4, 1, CV_32SC1);
     
@@ -22,8 +23,8 @@ NeuralNetCalibration::NeuralNetCalibration() : Thread("veyyy"){
      Layer 4: 2 neurons (2 output)
      */
     cvSet1D(neuralLayers, 0, cvScalar(4));
-    cvSet1D(neuralLayers, 1, cvScalar(5));
-    cvSet1D(neuralLayers, 2, cvScalar(5));
+    cvSet1D(neuralLayers, 1, cvScalar(15));
+    cvSet1D(neuralLayers, 2, cvScalar(15));
     cvSet1D(neuralLayers, 3, cvScalar(2));
 
     
@@ -185,7 +186,14 @@ void NeuralNetCalibration::run(){
         app->brainMousePost(g.x, g.y, currentTick);
         
         
-    }    
+    }
+    
+    DBG("Camera Exit");
+     
+    if(mySystemTimer != NULL)
+        mySystemTimer->removeListener( (TimerListener *) this);
+
+    
 }
 
 
@@ -199,6 +207,9 @@ void NeuralNetCalibration::timerTick(int64 ID){
     if(previousTick!=0 && isTrained)
         process();
 
+    if(iShouldExit)
+        timerWait.signal();
+    
 }
 
 cv::Point2f NeuralNetCalibration::predict(float eye_x,float eye_y,float tracker_x, float tracker_y){

@@ -44,10 +44,6 @@ void CameraInput::timerTick(int64 ID){
 }
 
 CameraInput::~CameraInput(){
-    DBG("destroying camera : ");
-     for (HashMap<ProcessLoop<cv::Mat, cv::Mat> *, bool>::Iterator i (process); i.next();){
-         delete i.getKey();
-     }
 }
 
 void CameraInput::shouldExit(){
@@ -116,6 +112,13 @@ void CameraInput::run(){
     
     
     capture.release();
+    
+    DBG("destroying camera processes: ");
+    for (HashMap<ProcessLoop<cv::Mat, cv::Mat> *, bool>::Iterator i (process); i.next();){
+        delete i.getKey();
+    }
+    process.clear();
+
     
     DBG("Camera Exit");
     if(mySystemTimer != NULL)

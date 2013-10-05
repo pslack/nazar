@@ -17,7 +17,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
-#define MAX_TRAINING_POINTS 1000
+#define MAX_TRAINING_POINTS 1500
 
 
 
@@ -187,7 +187,7 @@ private:
 
 class NeuralNetCalibration : public Thread, public TimerListener {
 public:
-    NeuralNetCalibration();
+    NeuralNetCalibration(juce::String myName,SystemTimer * sysTime);
     ~NeuralNetCalibration();
     void process();
     cv::Point2f predict(float eye_x,float eye_y,float tracker_x, float tracker_y);
@@ -207,6 +207,7 @@ protected:
     bool isTrained=false;
     WaitableEvent timerWait;
     bool iShouldExit=false;
+    SystemTimer * mySystemTimer=NULL;
 
 };
 
@@ -305,7 +306,7 @@ public:
     const String getApplicationExecutablePath() { return (File::getSpecialLocation(File::SpecialLocationType::hostApplicationPath).getFullPathName());}
     
     bool moreThanOneInstanceAllowed()       { return false; }
-    ScopedPointer<SystemTimer> sysTimer;
+    SystemTimer * sysTimer;
     ScopedPointer<SettingDialog> calibrationWindow;
     ScopedPointer<NazarTaskbarComponent> sysTrayWindow;
     ScopedPointer<NeuralNetCalibration> calibratorANN;
@@ -375,7 +376,7 @@ public:
 //        systemMouseController->leftClickMouseControl(1532, 747);
         
         
-        calibratorANN = new NeuralNetCalibration();
+        calibratorANN = new NeuralNetCalibration("veyyy",sysTimer);
         sysTimer -> registerListener(LATENCY_TIMER_ID, calibratorANN);
         
         sysTimer->startTimers();

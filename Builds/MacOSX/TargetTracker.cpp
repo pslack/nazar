@@ -18,9 +18,9 @@ using namespace std;
 using namespace juce;
 
 
-cv::Point compute2DPolygonCentroid(const cv::Point* vertices, int vertexCount)
+cv::Point2f compute2DPolygonCentroid(const cv::Point* vertices, int vertexCount)
 {
-    cv::Point centroid = {0, 0};
+    cv::Point2f centroid = cv::Point2f(0, 0);
     double signedArea = 0.0;
     double x0 = 0.0; // Current vertex X
     double y0 = 0.0; // Current vertex Y

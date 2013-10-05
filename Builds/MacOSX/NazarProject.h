@@ -17,7 +17,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
-#define MAX_TRAINING_POINTS 3000
+#define MAX_TRAINING_POINTS 1000
 
 
 
@@ -137,7 +137,7 @@ protected:
 
 private:
     void shutTheSystemDown();
-    int latency=80;
+    int latency=100;
     bool transportState;
 };
 
@@ -191,11 +191,12 @@ public:
     ~NeuralNetCalibration();
     void process();
     cv::Point2f predict(float eye_x,float eye_y,float tracker_x, float tracker_y);
-    void shutDownRequested(){}
+    void shutDownRequested(){iShouldExit=true;}
     void train();
     void setTrained(bool trained){
         isTrained=trained;
     }
+    bool isBrainTrained(){return isTrained;}
 protected:
     void run();
     void timerTick(int64 ID);
@@ -204,6 +205,9 @@ protected:
     int64 currentTick=0;
     float eye_x,eye_y,target_x,target_y;
     bool isTrained=false;
+    WaitableEvent timerWait;
+    bool iShouldExit=false;
+
 };
 
 class CameraInput : public Thread ,public TimerListener
@@ -340,7 +344,6 @@ public:
         }
         
         
-        sysTimer->startTimers();
         
 #if JUCE_MAC  // ..and also the main bar if we're using that on a Mac...
         
@@ -356,7 +359,7 @@ public:
         
         calibrationWindow=new SettingDialog();
 //        
-       calibrationWindow->setVisible(false);
+        calibrationWindow->setVisible(false);
         
         Desktop::getInstance().addGlobalMouseListener(this);
         
@@ -364,7 +367,7 @@ public:
         
         
         sysTimer -> registerListener(LATENCY_TIMER_ID, systemMouseController);
-       systemMouseController->startThread();
+        systemMouseController->startThread();
         
 //        systemMouseController->leftClickMouseControl(1048, 255);
 //        systemMouseController->leftClickMouseControl(1048, 747);
@@ -373,7 +376,9 @@ public:
         
         
         calibratorANN = new NeuralNetCalibration();
+        sysTimer -> registerListener(LATENCY_TIMER_ID, calibratorANN);
         
+        sysTimer->startTimers();
         
     }
     
@@ -421,34 +426,59 @@ public:
             if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
                 trainNeuralNet();
             }else {
-                targetInputData.set(TS,cv::Point2f(x_bar,y_bar));
+                targetInputTrainingData.set(TS,cv::Point2f(x_bar,y_bar));
             }
-            return;
+        }else {
+            if(calibratorANN->isBrainTrained())
+            targetInputData.set(TS,cv::Point2f(x_bar,y_bar));
+        
         }
     }
     
     void postEyeTrackerPoint(float x_bar, float y_bar, int64 TS){
         //DBG("E :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
-        if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
-            trainNeuralNet();
-        } else {
-            eyeInputData.set(TS, cv::Point2f(x_bar,y_bar));
+        if(trainingMode){
+           
+            if (eyeInputTrainingData.size() == MAX_TRAINING_POINTS){
+                trainNeuralNet();
+            } else {
+                eyeInputTrainingData.set(TS, cv::Point2f(x_bar,y_bar));
+            }
+        }else{
+            if(calibratorANN->isBrainTrained())
+                eyeInputData.set(TS, cv::Point2f(x_bar,y_bar));
+        
+        
         }
+            
         return;
     }
     
     void postMouseLocation(float x, float y , int64 TS){
-        //DBG("M :" + String(x) + ":" + String(y) + ":" + String(TS) );
-        if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
-            trainNeuralNet();
+       
+        if(trainingMode){
+            if (mouseInputTrainingData.size() == MAX_TRAINING_POINTS){
+                trainNeuralNet();
+            }else{
+                DBG("M :" + String(x) + ":" + String(y) + ":" + String(TS) );
+        
+                mouseInputTrainingData.set(TS, cv::Point2f(x,y));
+            }
+        }else{
         }
    
     }
     
+    void brainMousePost(float x, float y , int64 TS){
+        systemMouseController->moveMouse(x, y);
+    
+    }
+    
     void trainNeuralNet(){
         trainingMode=false;
-        DBG("TRAINING COMPLETE");
         calibratorANN->train();
+        DBG("TRAINING COMPLETE");
+
     }
     
     void anotherInstanceStarted (const String& commandLine)

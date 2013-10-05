@@ -60,7 +60,7 @@ void MouseController::queryMouse(){
     if (mp == currentScreenPosition){
     }else{
         currentScreenPosition = mp;
-        DBG("msmv detected:" + String(mp.getX()) + ":"+String(mp.getY()));
+       // DBG("msmv detected:" + String(mp.getX()) + ":"+String(mp.getY()));
         
     }
     

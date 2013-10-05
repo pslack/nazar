@@ -1,4 +1,26 @@
 #!/bin/bash
+//////////////////////////////////////////////////
+/// OPEN CV BINARY PACKAGER
+// written by Peter J Slack, 2013 , Nazar Project
+//
+// This is part of the application packaging
+// this makes the opencv libraries portable in our App bundle
+
+
+//set this to the path of your opencv build and it will convert
+//the libraries for packaging and running.
+//The Nazar Xcode project takes these files and copies them to the
+//app bundle as part of the build process. The files should be in 
+//the /lib subdirectory of your nazar project folder
+//the default location is your home directory
+//don't worry about the error messages from this script as your build 
+// of opencv may have different options that generate different libraries
+//if there are some that should be here as part of your build please add 
+//them to this packaging script or send me an email of the error codes 
+//generated when running the opencv unit tests
+//
+
+
 PATH_TO_PROJECT=~/nazar
 cd "$PATH_TO_PROJECT/lib"
 

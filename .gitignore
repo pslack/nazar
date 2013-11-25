@@ -5,3 +5,5 @@ lib
 share
 3rdparty
 
+OpenCVConfig-version.cmake
+OpenCVConfig.cmake

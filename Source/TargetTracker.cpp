@@ -169,7 +169,7 @@ if(frameBuffer)
     thresh.release();
     inputValue.release();
     
-    int64 now = Time::getHighResolutionTicks();
+    juce::int64 now = Time::getHighResolutionTicks();
     double totaltime = 1000.0 * Time::highResolutionTicksToSeconds (now - timeStamp);
     lastCalculatedLatency = totaltime;
 //    DBG("Tracker latency(ms)"+ juce::String(processName)+ "->" + juce::String(totaltime));

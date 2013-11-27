@@ -63,9 +63,11 @@ void SystemTimer::startShutDownTimerSequence(){
 
 
 SystemTimer::SystemTimer() : MultiTimer( ){
-    baseTime = Time::getHighResolutionTicks();
+   baseTime = Time::getHighResolutionTicks();
+   iShouldShutTheApplication = false;
+   latency = DEFAULT_LATENCY_MS;
+
     startTimer(SYSTEM_MONITOR_TIMER_ID, 1500);
-   
 }
 
 void SystemTimer::startTimers(){

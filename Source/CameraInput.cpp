@@ -8,13 +8,17 @@
 
 #include "NazarProject.h"
 
-using namespace cv;
-using namespace juce;
+//using namespace juce;
 
 
 CameraInput::CameraInput (juce::String myName,int camera_id ,SystemTimer * sysTime) : Thread(myName) {
     iShouldExit = false;
-    cameraID = camera_id;
+	 errorCount = 0 ;
+	 mySystemTimer=NULL;
+     cameraID = camera_id;
+	 doubleBufferBit=false;
+	 initialized = false;
+
     windowName=cv::String(myName.getCharPointer());
     DBG("Camera started : " + myName);
     mySystemTimer = sysTime;
@@ -33,7 +37,7 @@ void CameraInput::shutDownRequested(){
     shouldExit();
 }
 
-void CameraInput::timerTick(int64 ID){
+void CameraInput::timerTick(juce::int64 ID){
 
     //has to come from thread main!!
     jassert (getCurrentThreadId() != getThreadId());
@@ -57,7 +61,7 @@ void CameraInput::run(){
     if ( ! capture.isOpened() ) { DBG("--(!)Error opening video capture\n"); return; }
     loadCameraProperties();
     
-    int64 now;
+    juce::int64 now;
     double totaltime;
     
     while(!iShouldExit){
@@ -151,23 +155,23 @@ void CameraInput::loadCameraProperties(){
 */
     
     if(capture.isOpened()){
-        cameraSettings.setValue("CV_CAP_PROP_POS_MSEC",     capture.get(CAP_PROP_POS_MSEC));
-        cameraSettings.setValue("CV_CAP_PROP_POS_FRAMES",   capture.get(CAP_PROP_POS_FRAMES));
-        cameraSettings.setValue("CV_CAP_PROP_POS_AVI_RATIO",capture.get(CAP_PROP_POS_AVI_RATIO));
-        cameraSettings.setValue("CV_CAP_PROP_FRAME_WIDTH",  capture.get(CAP_PROP_FRAME_WIDTH));
-        cameraSettings.setValue("CV_CAP_PROP_FRAME_HEIGHT", capture.get(CAP_PROP_FRAME_HEIGHT));
-        cameraSettings.setValue("CV_CAP_PROP_FPS",          capture.get(CAP_PROP_FPS));
-        cameraSettings.setValue("CV_CAP_PROP_FOURCC",       capture.get(CAP_PROP_FOURCC));
-        cameraSettings.setValue("CV_CAP_PROP_FRAME_COUNT",  capture.get(CAP_PROP_FRAME_COUNT));
-        cameraSettings.setValue("CV_CAP_PROP_FORMAT",       capture.get(CAP_PROP_FORMAT));
-        cameraSettings.setValue("CV_CAP_PROP_MODE",         capture.get(CAP_PROP_MODE));
-        cameraSettings.setValue("CV_CAP_PROP_BRIGHTNESS",   capture.get(CAP_PROP_BRIGHTNESS));
-        cameraSettings.setValue("CV_CAP_PROP_CONTRAST",     capture.get(CAP_PROP_CONTRAST));
-        cameraSettings.setValue("CV_CAP_PROP_SATURATION",   capture.get(CAP_PROP_SATURATION));
-        cameraSettings.setValue("CV_CAP_PROP_HUE",          capture.get(CAP_PROP_HUE));
-        cameraSettings.setValue("CV_CAP_PROP_GAIN",         capture.get(CAP_PROP_GAIN));
-        cameraSettings.setValue("CV_CAP_PROP_CONVERT_RGB",  capture.get(CAP_PROP_CONVERT_RGB));
-        cameraSettings.setValue("CV_CAP_PROP_EXPOSURE",     capture.get(CAP_PROP_EXPOSURE));
+        cameraSettings.setValue("CV_CAP_PROP_POS_MSEC",     capture.get(cv::CAP_PROP_POS_MSEC));
+        cameraSettings.setValue("CV_CAP_PROP_POS_FRAMES",   capture.get(cv::CAP_PROP_POS_FRAMES));
+        cameraSettings.setValue("CV_CAP_PROP_POS_AVI_RATIO",capture.get(cv::CAP_PROP_POS_AVI_RATIO));
+        cameraSettings.setValue("CV_CAP_PROP_FRAME_WIDTH",  capture.get(cv::CAP_PROP_FRAME_WIDTH));
+        cameraSettings.setValue("CV_CAP_PROP_FRAME_HEIGHT", capture.get(cv::CAP_PROP_FRAME_HEIGHT));
+        cameraSettings.setValue("CV_CAP_PROP_FPS",          capture.get(cv::CAP_PROP_FPS));
+        cameraSettings.setValue("CV_CAP_PROP_FOURCC",       capture.get(cv::CAP_PROP_FOURCC));
+        cameraSettings.setValue("CV_CAP_PROP_FRAME_COUNT",  capture.get(cv::CAP_PROP_FRAME_COUNT));
+        cameraSettings.setValue("CV_CAP_PROP_FORMAT",       capture.get(cv::CAP_PROP_FORMAT));
+        cameraSettings.setValue("CV_CAP_PROP_MODE",         capture.get(cv::CAP_PROP_MODE));
+        cameraSettings.setValue("CV_CAP_PROP_BRIGHTNESS",   capture.get(cv::CAP_PROP_BRIGHTNESS));
+        cameraSettings.setValue("CV_CAP_PROP_CONTRAST",     capture.get(cv::CAP_PROP_CONTRAST));
+        cameraSettings.setValue("CV_CAP_PROP_SATURATION",   capture.get(cv::CAP_PROP_SATURATION));
+        cameraSettings.setValue("CV_CAP_PROP_HUE",          capture.get(cv::CAP_PROP_HUE));
+        cameraSettings.setValue("CV_CAP_PROP_GAIN",         capture.get(cv::CAP_PROP_GAIN));
+        cameraSettings.setValue("CV_CAP_PROP_CONVERT_RGB",  capture.get(cv::CAP_PROP_CONVERT_RGB));
+        cameraSettings.setValue("CV_CAP_PROP_EXPOSURE",     capture.get(cv::CAP_PROP_EXPOSURE));
  
     }
     
@@ -213,7 +217,7 @@ int CameraInput::scanAvailableCameras(){
     int foundCameras = 0;
     
     while (cameraFound){
-        VideoCapture cam;
+		cv::VideoCapture cam;
         if(cam.open(foundCameras)){
             if ( ! cam.isOpened() ) { DBG("--(!)Error opening video capture") }
 

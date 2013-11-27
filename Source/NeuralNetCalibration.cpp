@@ -10,7 +10,11 @@
 
 NeuralNetCalibration::NeuralNetCalibration(juce::String myName ,SystemTimer * sysTime) : Thread(myName){
     mySystemTimer = sysTime;
-    
+    previousTick=0;
+	currentTick=0;
+	isTrained=false;
+	 iShouldExit=false;
+
     //The matrix representation of our ANN. We'll have four layers.
     CvMat* neuralLayers = cvCreateMat(4, 1, CV_32SC1);
     
@@ -50,8 +54,8 @@ void NeuralNetCalibration::process(){
     NazarApplication * app = (NazarApplication *)JUCEApplication::getInstance();
 
     // the event loop will now be locked so it's safe to make a few calls..
-    HashMap<int64, cv::Point2f> * eyeData = app->getEyeData();
-    HashMap<int64, cv::Point2f> * targetData = app->getTargetData();
+    HashMap<juce::int64, cv::Point2f> * eyeData = app->getEyeData();
+    HashMap<juce::int64, cv::Point2f> * targetData = app->getTargetData();
     
     if(eyeData->contains(previousTick)){
         eyeP = eyeData->operator[](previousTick);
@@ -87,9 +91,9 @@ void NeuralNetCalibration::train(){
 
  
     
-    HashMap<int64, cv::Point2f> * mouseData = app->getMouseTrainingData();
-    HashMap<int64, cv::Point2f> * eyeData = app->getEyeTrainingData();
-    HashMap<int64, cv::Point2f> * targetData = app->getTargetTrainingData();
+    HashMap<juce::int64, cv::Point2f> * mouseData = app->getMouseTrainingData();
+    HashMap<juce::int64, cv::Point2f> * eyeData = app->getEyeTrainingData();
+    HashMap<juce::int64, cv::Point2f> * targetData = app->getTargetTrainingData();
     
     float td[MAX_TRAINING_POINTS][6];
     cv::Point2f mouseP;
@@ -99,8 +103,8 @@ void NeuralNetCalibration::train(){
     
     int train_sample_count = 0;
     //determine how many points we have
-    for (HashMap<int64, cv::Point2f>::Iterator i (* mouseData); i.next();){
-        int64 tkey = i.getKey();
+    for (HashMap<juce::int64, cv::Point2f>::Iterator i (* mouseData); i.next();){
+        juce::int64 tkey = i.getKey();
         //only if we have points for eye and tracker
         if(eyeData->contains(tkey) && targetData->contains(tkey)){
         
@@ -197,7 +201,7 @@ void NeuralNetCalibration::run(){
 }
 
 
-void NeuralNetCalibration::timerTick(int64 ID){
+void NeuralNetCalibration::timerTick(juce::int64 ID){
 
     if(currentTick!=0)
         previousTick = currentTick;

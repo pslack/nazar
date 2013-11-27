@@ -9,282 +9,7 @@
 #ifndef NAZARPROJECT_H_INCLUDED
 #define NAZARPROJECT_H_INCLUDED
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "SettingDialog.h"
-#include "ml.h"
-#include "opencv2/highgui/highgui.hpp"
-
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-
-#define MAX_TRAINING_POINTS 1500
-
-
-
-enum NAZAR_EVENTID{
-    NAZAR_MOUSE_MOVE = 0x0000,
-    NAZAR_MOUSE_RIGHT_CLICK = 0x0001,
-    NAZAR_MOUSE_LEFT_CLICK = 0x0002,
-    NAZAR_MOUSE_DOUBLE_CLICK = 0x0003
-    
-    
-};
-
-enum CommandIDs
-{
-    doCalibration              = 0x2000,
-    showEyeTrackWindow         = 0x2001,
-    showTargetTrackWindow      = 0x2002,
-    setTransportPlay            = 0x2003,
-    setTransportPause           = 0x2004
-    
-};
-
-
-//Messages
-
-const String MESSAGE_TIMER_TICK ="msg_tmt";
-
-
-//Timer IDs
-const int SYSTEM_MONITOR_TIMER_ID = 0;
-const int LATENCY_TIMER_ID =1;
-
-//Globals
-
-//T is input type , V is Type
-template < class T, class V>
-
-class ProcessLoop : public Thread{
-    
-public:
-    ProcessLoop(juce::String myName, bool myFrameBuffer) : Thread(myName){
-        processName=myName;
-        frameBuffer = myFrameBuffer;
-    }
-    virtual void run() = 0;
-    void process(T input_value, int64 ts){
-        timeStamp=ts;
-        inputValue = input_value;
-        startThread();
-    }
-    ~ProcessLoop(){}
-    
-    int64 timeStamp;
-    T inputValue;
-    juce::String processName;
-    bool frameBuffer;
-    double lastCalculatedLatency=0.0;
-protected:
-    
-};
-
-
-
-
-
-//==============================================================================
-/**
- Receives timer ticks
- 
- Used by various classes, e.g. buttons when they are pressed, to tell listeners
- about something that's happened.
- 
- */
-class TimerListener
-{
-public:
-    
-    TimerListener(){}
-    virtual ~TimerListener() {}
-    /** Overridden by your subclass to receive the timer tick.
-     
-     by a call to 
-     */
-    virtual void timerTick(int64 ID) = 0;
-    virtual void shutDownRequested() = 0;
-    double lastCalculatedLatency=0.0;
-     
-};
-
-class SystemTimer : public MultiTimer 
-{   
-public:
-    
-    
-    SystemTimer();
-    ~SystemTimer();
-    void timerCallback (int timerID);
-    
-    void setLatency(int latency);
-    int getLatency();
-    void registerListener(int ID , TimerListener * listener);
-    void removeListener(TimerListener * listener);
-    void startShutDownTimerSequence();
-    double startTimeStamp;
-    void startTimers();
-    void stopTimers();
-    void setTransportState(bool isPlaying);
-    
-protected:
-    int64 currentTimeStamp;
-    HashMap<TimerListener *,int> systemListeners;
-    HashMap<TimerListener *,int> systemTimerGroup;
-    bool iShouldShutTheApplication = false;
-    int64 baseTime; // the timestamp when we booted the timer up
-    //used as a relative base for our heartbeat
-
-
-private:
-    void shutTheSystemDown();
-    int latency=100;
-    bool transportState;
-};
-
-
-
-class NazarMouseEvent{
-public:
-    int64 timeStamp;
-    int nazarEventID;
-};
-
-class MouseController : public Thread, public TimerListener{
-    
-public:
-    MouseController() : Thread("oiii"){
-        
-    }
-    
-    void run(){
-        
-    }
-    void moveMouse(int x, int y);
-    void rightClickMouse(int x, int y);
-    void leftClickMouse(int x, int y);
-    void doubleClickMouse(int x, int y);
-    void leftClickMouseControl(int x, int y);
-    void timerTick(int64 tick);
-    void shutDownRequested(){
-    }
-    
-    ~MouseController(){}
-    int to(int x,int y);
-    
-private:
-    int64 currentTimeStamp;
-    int64 previousTimeStamp;
-    
-    void queryMouse();
-    MouseInputSource mouseIn = Desktop::getInstance().getMainMouseSource();
-    juce::Point<int> currentScreenPosition;
-    int mouseTimerCount =0;
-    
-private:
-    std::vector<NazarMouseEvent> mouseQueue;
-    
-};
-
-class NeuralNetCalibration : public Thread, public TimerListener {
-public:
-    NeuralNetCalibration(juce::String myName,SystemTimer * sysTime);
-    ~NeuralNetCalibration();
-    void process();
-    cv::Point2f predict(float eye_x,float eye_y,float tracker_x, float tracker_y);
-    void shutDownRequested(){iShouldExit=true;}
-    void train();
-    void setTrained(bool trained){
-        isTrained=trained;
-    }
-    bool isBrainTrained(){return isTrained;}
-protected:
-    void run();
-    void timerTick(int64 ID);
-    CvANN_MLP machineBrain;
-    int64 previousTick=0;
-    int64 currentTick=0;
-    float eye_x,eye_y,target_x,target_y;
-    bool isTrained=false;
-    WaitableEvent timerWait;
-    bool iShouldExit=false;
-    SystemTimer * mySystemTimer=NULL;
-
-};
-
-class CameraInput : public Thread ,public TimerListener
-{
-public:
-    static int numberOfCameras;
-    CameraInput(juce::String name,int camera_ID, SystemTimer * sysTimer);
-    ~CameraInput();
-    void run();
-    void shouldExit();
-    static int scanAvailableCameras();
-    void timerTick(int64 ID);
-    void shutDownRequested();
-    void registerProcess(ProcessLoop<cv::Mat, cv::Mat> * bufferProcess,bool doubleBuf);
-protected:
-    void processLoop();
-    int errorCount = 0 ;
-    SystemTimer * mySystemTimer=NULL;
-    int cameraID=0;
-    bool iShouldExit=false;
-    cv::String windowName;
-    PropertySet cameraSettings;
-    PropertySet propertyNames;
-    int64 currentTimeStamp;
-    void loadCameraProperties();
-    HashMap<ProcessLoop<cv::Mat,cv::Mat> * , bool> process;
-    
-private:
-    bool doubleBufferBit=false;
-    cv::VideoCapture capture;
-    cv::Mat frame_0;
-    cv::Mat frame_1;
-    WaitableEvent cameraShutter;
-    bool initialized = false;
-    
-    
-};
-
-
-
-
-class TargetTracker : public ProcessLoop<cv::Mat,cv::Mat> {
-public:
-    TargetTracker(juce::String myName ,bool myFrame) : ProcessLoop<cv::Mat, cv::Mat>(myName, myFrame){}
-    ~TargetTracker(){}
-    void run();
-};
-
-class EyeTracker : public ProcessLoop<cv::Mat,cv::Mat> {
-public:
-    EyeTracker(juce::String myName, bool myFrame) : ProcessLoop<cv::Mat, cv::Mat>(myName ,myFrame){}
-    ~EyeTracker(){}
-    void run();
-};
-
-
-//==============================================================================
-#if JUCE_WINDOWS || JUCE_LINUX || JUCE_MAC
-
-// Just add a simple icon to the Window system tray area..
-class NazarTaskbarComponent  : public SystemTrayIconComponent,
-private Timer
-{
-public:
-    NazarTaskbarComponent();
-    
-    Image createImageForIcon();
-    void mouseDown (const MouseEvent&);
-    void timerCallback();
-    static void menuInvocationCallback (int chosenItemID, NazarTaskbarComponent*);
-};
-
-#endif
-
-
-
+#include "Global.h"
 
 /*
  ==============================================================================
@@ -299,7 +24,14 @@ class NazarApplication  : public JUCEApplication , public MenuBarModel, public M
 {
 public:
     //==============================================================================
-    NazarApplication() {}
+    NazarApplication() {
+	  mainScreenWidth = 640;
+      mainScreenHeight = 480;
+	 eyeWindowVisible = true;
+    targetWindowVisible = true;
+    trainingMode = false;
+    transport = false; //fale = pause, true =play
+	}
     
     const String getApplicationName()       { return ProjectInfo::projectName; }
     const String getApplicationVersion()    { return ProjectInfo::versionString; }
@@ -313,8 +45,8 @@ public:
     
     MouseController * systemMouseController;
     
-    int mainScreenWidth = 640;
-    int mainScreenHeight = 480;
+    int mainScreenWidth;
+    int mainScreenHeight;
     
     
     //==============================================================================
@@ -324,7 +56,7 @@ public:
         initCommandManager();
         
         // Add your application's initialisation code here..
-        DBG(/*juce::String((int64)Thread::getCurrentThreadId()) +*/ ":  Main Thread"  );
+        DBG(/*juce::String((juce::int64)Thread::getCurrentThreadId()) +*/ ":  Main Thread"  );
         DBG(collectSystemInfo());
         
         sysTimer = new SystemTimer();
@@ -421,7 +153,7 @@ public:
         trainingMode=true;
     }
     
-    void postTargetTrackerPoint(float x_bar, float y_bar, int64 TS){
+    void postTargetTrackerPoint(float x_bar, float y_bar, juce::int64 TS){
        //DBG("T :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
         if(trainingMode){
             if (targetInputTrainingData.size() == MAX_TRAINING_POINTS){
@@ -436,7 +168,7 @@ public:
         }
     }
     
-    void postEyeTrackerPoint(float x_bar, float y_bar, int64 TS){
+    void postEyeTrackerPoint(float x_bar, float y_bar, juce::int64 TS){
         //DBG("E :" + String(x_bar) + ":" + String(y_bar) + ":" + String(TS) );
         if(trainingMode){
            
@@ -455,7 +187,7 @@ public:
         return;
     }
     
-    void postMouseLocation(float x, float y , int64 TS){
+    void postMouseLocation(float x, float y , juce::int64 TS){
        
         if(trainingMode){
             if (mouseInputTrainingData.size() == MAX_TRAINING_POINTS){
@@ -470,7 +202,7 @@ public:
    
     }
     
-    void brainMousePost(float x, float y , int64 TS){
+    void brainMousePost(float x, float y , juce::int64 TS){
         systemMouseController->moveMouse(x, y);
     
     }
@@ -507,19 +239,19 @@ public:
     
     /////////// ALN
     
-    HashMap<int64, cv::Point2f> * getMouseTrainingData(){
+    HashMap<juce::int64, cv::Point2f> * getMouseTrainingData(){
         return (&mouseInputTrainingData);
     }
-    HashMap<int64, cv::Point2f> * getTargetTrainingData(){
+    HashMap<juce::int64, cv::Point2f> * getTargetTrainingData(){
         return (&targetInputTrainingData);
     }
-    HashMap<int64, cv::Point2f> * getEyeTrainingData(){
+    HashMap<juce::int64, cv::Point2f> * getEyeTrainingData(){
         return (&eyeInputTrainingData);
     }
-    HashMap<int64, cv::Point2f> * getTargetData(){
+    HashMap<juce::int64, cv::Point2f> * getTargetData(){
         return (&targetInputData);
     }
-    HashMap<int64, cv::Point2f> * getEyeData(){
+    HashMap<juce::int64, cv::Point2f> * getEyeData(){
         return (&eyeInputData);
     }
     
@@ -743,21 +475,21 @@ public:
     
 private:
     
-    bool eyeWindowVisible = true;
-    bool targetWindowVisible = true;
+    bool eyeWindowVisible;
+    bool targetWindowVisible;
      
     ScopedPointer<ApplicationCommandManager> commandManager;
 
-    HashMap<int64, cv::Point2f> mouseInputTrainingData;
-    HashMap<int64,cv::Point2f> targetInputTrainingData;
-    HashMap<int64,cv::Point2f> eyeInputTrainingData;
+    HashMap<juce::int64, cv::Point2f> mouseInputTrainingData;
+    HashMap<juce::int64,cv::Point2f> targetInputTrainingData;
+    HashMap<juce::int64,cv::Point2f> eyeInputTrainingData;
 
-    HashMap<int64, cv::Point2f> eyeInputData;
-    HashMap<int64,cv::Point2f> targetInputData;
+    HashMap<juce::int64, cv::Point2f> eyeInputData;
+    HashMap<juce::int64,cv::Point2f> targetInputData;
 
     
-    bool trainingMode = false;
-    bool transport = false; //fale = pause, true =play
+    bool trainingMode;
+    bool transport; //fale = pause, true =play
     
     void initCommandManager()
     {

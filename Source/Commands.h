@@ -9,6 +9,16 @@
 #ifndef Nazar_Commands_h
 #define Nazar_Commands_h
 
+enum CommandIDs
+{
+    doCalibration              = 0x2000,
+    showEyeTrackWindow         = 0x2001,
+    showTargetTrackWindow      = 0x2002,
+    setTransportPlay            = 0x2003,
+    setTransportPause           = 0x2004
+    
+};
+
 
 
 

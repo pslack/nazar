@@ -10,8 +10,6 @@
 
 #include "NazarProject.h"
 
-#include "MouseEventSenderMAC.h"
-
 
 void MouseController::moveMouse(int x, int y)
 {
@@ -44,14 +42,17 @@ void MouseController::doubleClickMouse(int x, int y)
     
 }
 
-void MouseController::timerTick(int64 tick){
+void MouseController::timerTick(juce::int64 tick){
     previousTimeStamp = currentTimeStamp;
     currentTimeStamp = tick;
     queryMouse();
 }
 
 
-
+  MouseController::MouseController() : Thread("oiii"){
+	  mouseIn = juce::Desktop::getInstance().getMainMouseSource();
+		 mouseTimerCount =0;
+    }
 
 void MouseController::queryMouse(){
     Point<int> mp = mouseIn.getScreenPosition();

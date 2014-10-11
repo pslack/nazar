@@ -50,7 +50,7 @@ void MouseController::timerTick(juce::int64 tick){
 
 
   MouseController::MouseController() : Thread("oiii"){
-	  mouseIn = juce::Desktop::getInstance().getMainMouseSource();
+//	  MouseController::mouseIn = juce::Desktop::getInstance().getMainMouseSource();
 		 mouseTimerCount =0;
     }
 
